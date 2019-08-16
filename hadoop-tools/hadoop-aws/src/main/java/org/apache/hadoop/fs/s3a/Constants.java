@@ -35,6 +35,10 @@ public class Constants {
 
   //use a custom endpoint?
   public static final String ENDPOINT = "fs.s3a.endpoint";
+
+  //Enable path style access? Overrides default virtual hosting
+  public static final String PATH_STYLE_ACCESS = "fs.s3a.path.style.access";
+
   //connect to s3 through a proxy server?
   public static final String PROXY_HOST = "fs.s3a.proxy.host";
   public static final String PROXY_PORT = "fs.s3a.proxy.port";
