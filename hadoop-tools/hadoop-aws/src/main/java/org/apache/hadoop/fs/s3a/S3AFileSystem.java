@@ -40,6 +40,7 @@ import com.amazonaws.auth.AWSCredentialsProviderChain;
 
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
@@ -242,6 +243,13 @@ public class S3AFileSystem extends FileSystem {
         LOG.error(msg);
         throw new IllegalArgumentException(msg, e);
       }
+    }
+
+    // support for path.style.access is introduced after 2.7, adding it here
+    boolean pathStyleAccess = conf.getBoolean(PATH_STYLE_ACCESS, false);
+    if (pathStyleAccess) {
+      LOG.debug("Enabling path style access!");
+      s3.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
     }
 
     maxKeys = conf.getInt(MAX_PAGING_KEYS, DEFAULT_MAX_PAGING_KEYS);
@@ -1092,7 +1100,11 @@ public class S3AFileSystem extends FileSystem {
     }
     CopyObjectRequest copyObjectRequest = new CopyObjectRequest(bucket, srcKey, bucket, dstKey);
     copyObjectRequest.setCannedAccessControlList(cannedACL);
-    copyObjectRequest.setNewObjectMetadata(dstom);
+
+    // localstack does not calculate the MD5 checksum on write properly,
+    // so if this metadata is set then the client will raise an exception
+    // once the transfer is complete and it tries to compare checksums
+    // copyObjectRequest.setNewObjectMetadata(dstom);
 
     ProgressListener progressListener = new ProgressListener() {
       public void progressChanged(ProgressEvent progressEvent) {
